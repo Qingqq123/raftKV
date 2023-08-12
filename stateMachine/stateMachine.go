@@ -30,7 +30,7 @@ type ExampleStateMachine struct {
 	DB        *database.DB
 }
 
-// NewExampleStateMachine creates and return a new ExampleStateMachine object.
+
 func NewExampleStateMachine(shardID uint64,
 	replicaID uint64) sm.IStateMachine {
 	return &ExampleStateMachine{
@@ -40,9 +40,7 @@ func NewExampleStateMachine(shardID uint64,
 	}
 }
 
-// Lookup performs local lookup on the ExampleStateMachine instance. In this example,
-// we always return the Count value as a little endian binary encoded byte
-// slice.
+
 func (s *ExampleStateMachine) Lookup(query interface{}) (interface{}, error) {
 	oper := query.([][]byte)
 	typ := strings.ToLower(string(oper[0]))
@@ -258,7 +256,6 @@ func (s *ExampleStateMachine) Lookup(query interface{}) (interface{}, error) {
 	return nil, errors.New("unknown operation in look up")
 }
 
-// Update updates the object using the specified committed raft entry.
 func (s *ExampleStateMachine) Update(e []byte) (sm.Result, error) {
 	// in this example, we print out the following hello world message for each
 	// incoming update request. we also increase the counter by one to remember
@@ -434,8 +431,6 @@ func (s *ExampleStateMachine) Update(e []byte) (sm.Result, error) {
 	return sm.Result{Value: 0, Data: []byte("unknow command")}, nil
 }
 
-// SaveSnapshot saves the current IStateMachine state into a snapshot using the
-// specified io.Writer object.
 func (s *ExampleStateMachine) SaveSnapshot(w io.Writer,
 	fc sm.ISnapshotFileCollection, done <-chan struct{}) error {
 	// as shown above, the only state that can be saved is the Count variable
@@ -447,7 +442,6 @@ func (s *ExampleStateMachine) SaveSnapshot(w io.Writer,
 	return err
 }
 
-// RecoverFromSnapshot recovers the state using the provided snapshot.
 func (s *ExampleStateMachine) RecoverFromSnapshot(r io.Reader,
 	files []sm.SnapshotFile,
 	done <-chan struct{}) error {
@@ -462,7 +456,4 @@ func (s *ExampleStateMachine) RecoverFromSnapshot(r io.Reader,
 	return nil
 }
 
-// Close closes the IStateMachine instance. There is nothing for us to cleanup
-// or release as this is a pure in memory data store. Note that the Close
-// method is not guaranteed to be called as node can crash at any time.
 func (s *ExampleStateMachine) Close() error { return nil }
