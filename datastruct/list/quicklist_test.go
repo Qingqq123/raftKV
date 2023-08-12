@@ -70,7 +70,6 @@ func TestQuickList_Insert(t *testing.T) {
 		}
 	}
 
-	// insert into second half page
 	list = NewQuickList()
 	for i := 0; i < pageSize; i++ {
 		list.Add(0)
