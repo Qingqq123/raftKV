@@ -2,17 +2,13 @@ package list
 
 import "container/list"
 
-// pageSize must be even
 const pageSize = 1024
 
-// QuickList is a linked list of page (which type is []interface{})
-// QuickList has better performance than LinkedList of Add, Range and memory usage
 type QuickList struct {
-	data *list.List // list of []interface{}
+	data *list.List 
 	size int
 }
 
-// iterator of QuickList, move between [-1, ql.Len()]
 type iterator struct {
 	node   *list.Element
 	offset int
@@ -26,30 +22,26 @@ func NewQuickList() *QuickList {
 	return l
 }
 
-// Add adds value to the tail
 func (ql *QuickList) Add(val interface{}) {
 	ql.size++
-	if ql.data.Len() == 0 { // empty list
+	if ql.data.Len() == 0 { 
 		page := make([]interface{}, 0, pageSize)
 		page = append(page, val)
 		ql.data.PushBack(page)
 		return
 	}
-	// assert list.data.Back() != nil
 	backNode := ql.data.Back()
 	backPage := backNode.Value.([]interface{})
-	if len(backPage) == cap(backPage) { // full page, create new page
+	if len(backPage) == cap(backPage) { 
 		page := make([]interface{}, 0, pageSize)
 		page = append(page, val)
 		ql.data.PushBack(page)
 		return
 	}
-	// append into page
 	backPage = append(backPage, val)
 	backNode.Value = backPage
 }
 
-// find returns page and in-page-offset of given index
 func (ql *QuickList) find(index int) *iterator {
 	if ql == nil {
 		panic("list is nil")
@@ -61,11 +53,9 @@ func (ql *QuickList) find(index int) *iterator {
 	var page []interface{}
 	var pageBeg int
 	if index < ql.size/2 {
-		// search from front
 		n = ql.data.Front()
 		pageBeg = 0
 		for {
-			// assert: n != nil
 			page = n.Value.([]interface{})
 			if pageBeg+len(page) > index {
 				break
@@ -74,7 +64,6 @@ func (ql *QuickList) find(index int) *iterator {
 			n = n.Next()
 		}
 	} else {
-		// search from back
 		n = ql.data.Back()
 		pageBeg = ql.size
 		for {
@@ -102,14 +91,12 @@ func (iter *iterator) page() []interface{} {
 	return iter.node.Value.([]interface{})
 }
 
-// next returns whether iter is in bound
 func (iter *iterator) next() bool {
 	page := iter.page()
 	if iter.offset < len(page)-1 {
 		iter.offset++
 		return true
 	}
-	// move to next page
 	if iter.node == iter.ql.data.Back() {
 		// already at last node
 		iter.offset = len(page)
@@ -120,15 +107,12 @@ func (iter *iterator) next() bool {
 	return true
 }
 
-// prev returns whether iter is in bound
 func (iter *iterator) prev() bool {
 	if iter.offset > 0 {
 		iter.offset--
 		return true
 	}
-	// move to prev page
 	if iter.node == iter.ql.data.Front() {
-		// already at first page
 		iter.offset = -1
 		return false
 	}
@@ -159,7 +143,6 @@ func (iter *iterator) atBegin() bool {
 	return iter.offset == -1
 }
 
-// Get returns value at the given index
 func (ql *QuickList) Get(index int) (val interface{}) {
 	iter := ql.find(index)
 	return iter.get()
@@ -170,30 +153,27 @@ func (iter *iterator) set(val interface{}) {
 	page[iter.offset] = val
 }
 
-// Set updates value at the given index, the index should between [0, list.size]
 func (ql *QuickList) Set(index int, val interface{}) {
 	iter := ql.find(index)
 	iter.set(val)
 }
 
 func (ql *QuickList) Insert(index int, val interface{}) {
-	if index == ql.size { // insert at
+	if index == ql.size { 
 		ql.Add(val)
 		return
 	}
 	iter := ql.find(index)
 	page := iter.node.Value.([]interface{})
 	if len(page) < pageSize {
-		// insert into not full page
 		page = append(page[:iter.offset+1], page[iter.offset:]...)
 		page[iter.offset] = val
 		iter.node.Value = page
 		ql.size++
 		return
 	}
-	// insert into a full page may cause memory copy, so we split a full page into two half pages
 	var nextPage []interface{}
-	nextPage = append(nextPage, page[pageSize/2:]...) // pageSize must be even
+	nextPage = append(nextPage, page[pageSize/2:]...) 
 	page = page[:pageSize/2]
 	if iter.offset < len(page) {
 		page = append(page[:iter.offset+1], page[iter.offset:]...)
@@ -203,7 +183,6 @@ func (ql *QuickList) Insert(index int, val interface{}) {
 		nextPage = append(nextPage[:i+1], nextPage[i:]...)
 		nextPage[i] = val
 	}
-	// store current page and next page
 	iter.node.Value = page
 	ql.data.InsertAfter(nextPage, iter.node)
 	ql.size++
@@ -214,20 +193,15 @@ func (iter *iterator) remove() interface{} {
 	val := page[iter.offset]
 	page = append(page[:iter.offset], page[iter.offset+1:]...)
 	if len(page) > 0 {
-		// page is not empty, update iter.offset only
 		iter.node.Value = page
 		if iter.offset == len(page) {
-			// removed page[-1], node should move to next page
 			if iter.node != iter.ql.data.Back() {
 				iter.node = iter.node.Next()
 				iter.offset = 0
 			}
-			// else: assert iter.atEnd() == true
 		}
 	} else {
-		// page is empty, update iter.node and iter.offset
 		if iter.node == iter.ql.data.Back() {
-			// removed last element, ql is empty now
 			iter.ql.data.Remove(iter.node)
 			iter.node = nil
 			iter.offset = 0
@@ -242,18 +216,15 @@ func (iter *iterator) remove() interface{} {
 	return val
 }
 
-// Remove removes value at the given index
 func (ql *QuickList) Remove(index int) interface{} {
 	iter := ql.find(index)
 	return iter.remove()
 }
 
-// Len returns the number of elements in list
 func (ql *QuickList) Len() int {
 	return ql.size
 }
 
-// RemoveLast removes the last element and returns its value
 func (ql *QuickList) RemoveLast() interface{} {
 	if ql.Len() == 0 {
 		return nil
@@ -271,7 +242,6 @@ func (ql *QuickList) RemoveLast() interface{} {
 	return val
 }
 
-// RemoveAllByVal removes all elements with the given val
 func (ql *QuickList) RemoveAllByVal(expected Expected) int {
 	iter := ql.find(0)
 	removed := 0
@@ -286,8 +256,6 @@ func (ql *QuickList) RemoveAllByVal(expected Expected) int {
 	return removed
 }
 
-// RemoveByVal removes at most `count` values of the specified value in this list
-// scan from left to right
 func (ql *QuickList) RemoveByVal(expected Expected, count int) int {
 	if ql.size == 0 {
 		return 0
@@ -327,8 +295,6 @@ func (ql *QuickList) ReverseRemoveByVal(expected Expected, count int) int {
 	return removed
 }
 
-// ForEach visits each element in the list
-// if the consumer returns false, the loop will be break
 func (ql *QuickList) ForEach(consumer Consumer) {
 	if ql == nil {
 		panic("list is nil")
@@ -362,7 +328,6 @@ func (ql *QuickList) Contains(expected Expected) bool {
 	return contains
 }
 
-// Range returns elements which index within [start, stop)
 func (ql *QuickList) Range(start int, stop int) []interface{} {
 	if start < 0 || start >= ql.Len() {
 		panic("`start` out of range")
