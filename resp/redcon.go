@@ -1,4 +1,3 @@
-// Package redcon implements a Redis compatible server framework
 package resp
 
 import (
@@ -36,89 +35,31 @@ func (err *errProtocol) Error() string {
 	return "Protocol error: " + err.msg
 }
 
-// Conn represents a client connection
 type Conn interface {
 	GetSession() *client.Session
 	SetSession(session *client.Session)
-	// RemoteAddr returns the remote address of the client connection.
 	RemoteAddr() string
-	// Close closes the connection.
 	Close() error
-	// WriteError writes an error to the client.
 	WriteError(msg string)
-	// WriteString writes a string to the client.
 	WriteString(str string)
-	// WriteBulk writes bulk bytes to the client.
 	WriteBulk(bulk []byte)
-	// WriteBulkString writes a bulk string to the client.
 	WriteBulkString(bulk string)
-	// WriteInt writes an integer to the client.
 	WriteInt(num int)
-	// WriteInt64 writes a 64-bit signed integer to the client.
 	WriteInt64(num int64)
-	// WriteUint64 writes a 64-bit unsigned integer to the client.
 	WriteUint64(num uint64)
-	// WriteArray writes an array header. You must then write additional
-	// sub-responses to the client to complete the response.
-	// For example to write two strings:
-	//
-	//   c.WriteArray(2)
-	//   c.WriteBulkString("item 1")
-	//   c.WriteBulkString("item 2")
 	WriteArray(count int)
-	// WriteNull writes a null to the client
 	WriteNull()
-	// WriteRaw writes raw data to the client.
 	WriteRaw(data []byte)
-	// WriteAny writes any type to the client.
-	//   nil             -> null
-	//   error           -> error (adds "ERR " when first word is not uppercase)
-	//   string          -> bulk-string
-	//   numbers         -> bulk-string
-	//   []byte          -> bulk-string
-	//   bool            -> bulk-string ("0" or "1")
-	//   slice           -> array
-	//   map             -> array with key/value pairs
-	//   SimpleString    -> string
-	//   SimpleInt       -> integer
-	//   everything-else -> bulk-string representation using fmt.Sprint()
 	WriteAny(any interface{})
-	// Context returns a user-defined context
 	Context() interface{}
-	// SetContext sets a user-defined context
 	SetContext(v interface{})
-	// SetReadBuffer updates the buffer read size for the connection
 	SetReadBuffer(bytes int)
-	// Detach return a connection that is detached from the server.
-	// Useful for operations like PubSub.
-	//
-	//   dconn := conn.Detach()
-	//   go func(){
-	//       defer dconn.Close()
-	//       cmd, err := dconn.ReadCommand()
-	//       if err != nil{
-	//           fmt.Printf("read failed: %v\n", err)
-	//	         return
-	//       }
-	//       fmt.Printf("received command: %v", cmd)
-	//       hconn.WriteString("OK")
-	//       if err := dconn.Flush(); err != nil{
-	//           fmt.Printf("write failed: %v\n", err)
-	//	         return
-	//       }
-	//   }()
 	Detach() DetachedConn
-	// ReadPipeline returns all commands in current pipeline, if any
-	// The commands are removed from the pipeline.
 	ReadPipeline() []Command
-	// PeekPipeline returns all commands in current pipeline, if any.
-	// The commands remain in the pipeline.
 	PeekPipeline() []Command
-	// NetConn returns the base net.Conn connection
 	NetConn() net.Conn
 }
 
-// NewServer returns a new Redcon server configured on "tcp" network net.
 func NewServer(addr string,
 	handler func(conn Conn, cmd Command),
 	accept func(conn Conn) bool,
@@ -127,7 +68,6 @@ func NewServer(addr string,
 	return NewServerNetwork("tcp", addr, handler, accept, closed)
 }
 
-// NewServerTLS returns a new Redcon TLS server configured on "tcp" network net.
 func NewServerTLS(addr string,
 	handler func(conn Conn, cmd Command),
 	accept func(conn Conn) bool,
@@ -137,8 +77,7 @@ func NewServerTLS(addr string,
 	return NewServerNetworkTLS("tcp", addr, handler, accept, closed, config)
 }
 
-// NewServerNetwork returns a new Redcon server. The network net must be
-// a stream-oriented network: "tcp", "tcp4", "tcp6", "unix" or "unixpacket"
+
 func NewServerNetwork(
 	net, laddr string,
 	handler func(conn Conn, cmd Command),
@@ -157,8 +96,6 @@ func NewServerNetwork(
 	return s
 }
 
-// NewServerNetworkTLS returns a new TLS Redcon server. The network net must be
-// a stream-oriented network: "tcp", "tcp4", "tcp6", "unix" or "unixpacket"
 func NewServerNetworkTLS(
 	net, laddr string,
 	handler func(conn Conn, cmd Command),
@@ -185,8 +122,6 @@ func NewServerNetworkTLS(
 	return tls
 }
 
-// Close stops listening on the TCP address.
-// Already Accepted connections will be closed.
 func (s *Server) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -197,18 +132,14 @@ func (s *Server) Close() error {
 	return s.ln.Close()
 }
 
-// ListenAndServe serves incoming connections.
 func (s *Server) ListenAndServe() error {
 	return s.ListenServeAndSignal(nil)
 }
 
-// Addr returns server's listen address
 func (s *Server) Addr() net.Addr {
 	return s.ln.Addr()
 }
 
-// Close stops listening on the TCP address.
-// Already Accepted connections will be closed.
 func (s *TLSServer) Close() error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -219,7 +150,6 @@ func (s *TLSServer) Close() error {
 	return s.ln.Close()
 }
 
-// ListenAndServe serves incoming connections.
 func (s *TLSServer) ListenAndServe() error {
 	return s.ListenServeAndSignal(nil)
 }
@@ -231,7 +161,6 @@ func newServer() *Server {
 	return s
 }
 
-// Serve creates a new server and serves with the given net.Listener.
 func Serve(ln net.Listener,
 	handler func(conn Conn, cmd Command),
 	accept func(conn Conn) bool,
@@ -249,7 +178,6 @@ func Serve(ln net.Listener,
 	return serve(s)
 }
 
-// ListenAndServe creates a new server and binds to addr configured on "tcp" network net.
 func ListenAndServe(addr string,
 	handler func(conn Conn, cmd Command),
 	accept func(conn Conn) bool,
@@ -258,7 +186,6 @@ func ListenAndServe(addr string,
 	return ListenAndServeNetwork("tcp", addr, handler, accept, closed)
 }
 
-// ListenAndServeTLS creates a new TLS server and binds to addr configured on "tcp" network net.
 func ListenAndServeTLS(addr string,
 	handler func(conn Conn, cmd Command),
 	accept func(conn Conn) bool,
@@ -268,8 +195,6 @@ func ListenAndServeTLS(addr string,
 	return ListenAndServeNetworkTLS("tcp", addr, handler, accept, closed, config)
 }
 
-// ListenAndServeNetwork creates a new server and binds to addr. The network net must be
-// a stream-oriented network: "tcp", "tcp4", "tcp6", "unix" or "unixpacket"
 func ListenAndServeNetwork(
 	net, laddr string,
 	handler func(conn Conn, cmd Command),
@@ -279,8 +204,6 @@ func ListenAndServeNetwork(
 	return NewServerNetwork(net, laddr, handler, accept, closed).ListenAndServe()
 }
 
-// ListenAndServeNetworkTLS creates a new TLS server and binds to addr. The network net must be
-// a stream-oriented network: "tcp", "tcp4", "tcp6", "unix" or "unixpacket"
 func ListenAndServeNetworkTLS(
 	net, laddr string,
 	handler func(conn Conn, cmd Command),
@@ -291,8 +214,6 @@ func ListenAndServeNetworkTLS(
 	return NewServerNetworkTLS(net, laddr, handler, accept, closed, config).ListenAndServe()
 }
 
-// ListenServeAndSignal serves incoming connections and passes nil or error
-// when listening. signal can be nil.
 func (s *Server) ListenServeAndSignal(signal chan error) error {
 	ln, err := net.Listen(s.net, s.laddr)
 	if err != nil {
@@ -310,7 +231,6 @@ func (s *Server) ListenServeAndSignal(signal chan error) error {
 	return serve(s)
 }
 
-// Serve serves incoming connections with the given net.Listener.
 func (s *Server) Serve(ln net.Listener) error {
 	s.mu.Lock()
 	s.ln = ln
@@ -320,8 +240,6 @@ func (s *Server) Serve(ln net.Listener) error {
 	return serve(s)
 }
 
-// ListenServeAndSignal serves incoming connections and passes nil or error
-// when listening. signal can be nil.
 func (s *TLSServer) ListenServeAndSignal(signal chan error) error {
 	ln, err := tls.Listen(s.net, s.laddr, s.config)
 	if err != nil {
@@ -361,7 +279,6 @@ func serve(s *Server) error {
 				return nil
 			}
 			if errors.Is(err, net.ErrClosed) {
-				// see https://github.com/tidwall/redcon/issues/46
 				return nil
 			}
 			if s.AcceptError != nil {
@@ -390,16 +307,13 @@ func serve(s *Server) error {
 	}
 }
 
-// handle manages the server connection.
 func handle(s *Server, c *conn) {
 	var err error
 	defer func() {
 		if err != errDetached {
-			// do not close the connection when a detach is detected.
 			c.conn.Close()
 		}
 		func() {
-			// remove the conn from the server
 			s.mu.Lock()
 			defer s.mu.Unlock()
 			delete(s.conns, c)
@@ -413,17 +327,13 @@ func handle(s *Server, c *conn) {
 	}()
 
 	err = func() error {
-		// read commands and feed back to the client
 		for {
-			// read pipeline commands
 			if c.idleClose != 0 {
 				c.conn.SetReadDeadline(time.Now().Add(c.idleClose))
 			}
 			cmds, err := c.rd.readCommands(nil)
 			if err != nil {
 				if err, ok := err.(*errProtocol); ok {
-					// All protocol errors should attempt a response to
-					// the client. Ignore write errors.
 					c.wr.WriteError("ERR " + err.Error())
 					c.wr.Flush()
 				}
@@ -440,7 +350,6 @@ func handle(s *Server, c *conn) {
 				s.handler(c, cmd)
 			}
 			if c.detached {
-				// client has been detached
 				return errDetached
 			}
 			if c.closed {
@@ -453,7 +362,6 @@ func handle(s *Server, c *conn) {
 	}()
 }
 
-// conn represents a client connection
 type conn struct {
 	conn      net.Conn
 	wr        *Writer
@@ -507,7 +415,6 @@ func (c *conn) NetConn() net.Conn {
 	return c.conn
 }
 
-// BaseWriter returns the underlying connection writer, if any
 func BaseWriter(c Conn) *Writer {
 	if c, ok := c.(*conn); ok {
 		return c.wr
@@ -515,21 +422,13 @@ func BaseWriter(c Conn) *Writer {
 	return nil
 }
 
-// DetachedConn represents a connection that is detached from the server
 type DetachedConn interface {
-	// Conn is the original connection
 	Conn
-	// ReadCommand reads the next client command.
 	ReadCommand() (Command, error)
-	// Flush flushes any writes to the network.
 	Flush() error
 }
 
-// Detach removes the current connection from the server loop and returns
-// a detached connection. This is useful for operations such as PubSub.
-// The detached connection must be closed by calling Close() when done.
-// All writes such as WriteString() will not be written to the client
-// until Flush() is called.
+
 func (c *conn) Detach() DetachedConn {
 	c.detached = true
 	cmds := c.cmds
@@ -542,12 +441,10 @@ type detachedConn struct {
 	cmds []Command
 }
 
-// Flush writes and Write* calls to the client.
 func (dc *detachedConn) Flush() error {
 	return dc.conn.wr.Flush()
 }
 
-// ReadCommand read the next command from the client.
 func (dc *detachedConn) ReadCommand() (Command, error) {
 	if len(dc.cmds) > 0 {
 		cmd := dc.cmds[0]
@@ -565,15 +462,11 @@ func (dc *detachedConn) ReadCommand() (Command, error) {
 	return cmd, nil
 }
 
-// Command represent a command
 type Command struct {
-	// Raw is a encoded RESP message.
 	Raw []byte
-	// Args is a series of arguments that make up the command.
 	Args [][]byte
 }
 
-// Server defines a server for clients for managing client connections.
 type Server struct {
 	mu        sync.Mutex
 	net       string
@@ -586,31 +479,26 @@ type Server struct {
 	done      bool
 	idleClose time.Duration
 
-	// AcceptError is an optional function used to handle Accept errors.
 	AcceptError func(err error)
 }
 
-// TLSServer defines a server for clients for managing client connections.
 type TLSServer struct {
 	*Server
 	config *tls.Config
 }
 
-// Writer allows for writing RESP messages.
 type Writer struct {
 	w   io.Writer
 	b   []byte
 	err error
 }
 
-// NewWriter creates a new RESP writer.
 func NewWriter(wr io.Writer) *Writer {
 	return &Writer{
 		w: wr,
 	}
 }
 
-// WriteNull writes a null to the client
 func (w *Writer) WriteNull() {
 	if w.err != nil {
 		return
@@ -618,13 +506,6 @@ func (w *Writer) WriteNull() {
 	w.b = AppendNull(w.b)
 }
 
-// WriteArray writes an array header. You must then write additional
-// sub-responses to the client to complete the response.
-// For example to write two strings:
-//
-//	c.WriteArray(2)
-//	c.WriteBulkString("item 1")
-//	c.WriteBulkString("item 2")
 func (w *Writer) WriteArray(count int) {
 	if w.err != nil {
 		return
@@ -632,7 +513,6 @@ func (w *Writer) WriteArray(count int) {
 	w.b = AppendArray(w.b, count)
 }
 
-// WriteBulk writes bulk bytes to the client.
 func (w *Writer) WriteBulk(bulk []byte) {
 	if w.err != nil {
 		return
@@ -640,7 +520,6 @@ func (w *Writer) WriteBulk(bulk []byte) {
 	w.b = AppendBulk(w.b, bulk)
 }
 
-// WriteBulkString writes a bulk string to the client.
 func (w *Writer) WriteBulkString(bulk string) {
 	if w.err != nil {
 		return
@@ -648,8 +527,6 @@ func (w *Writer) WriteBulkString(bulk string) {
 	w.b = AppendBulkString(w.b, bulk)
 }
 
-// Buffer returns the unflushed buffer. This is a copy so changes
-// to the resulting []byte will not affect the writer.
 func (w *Writer) Buffer() []byte {
 	if w.err != nil {
 		return nil
@@ -657,7 +534,6 @@ func (w *Writer) Buffer() []byte {
 	return append([]byte(nil), w.b...)
 }
 
-// SetBuffer replaces the unflushed buffer with new bytes.
 func (w *Writer) SetBuffer(raw []byte) {
 	if w.err != nil {
 		return
@@ -666,7 +542,6 @@ func (w *Writer) SetBuffer(raw []byte) {
 	w.b = append(w.b, raw...)
 }
 
-// Flush writes all unflushed Write* calls to the underlying writer.
 func (w *Writer) Flush() error {
 	if w.err != nil {
 		return w.err
@@ -680,7 +555,6 @@ func (w *Writer) Flush() error {
 	return w.err
 }
 
-// WriteError writes an error to the client.
 func (w *Writer) WriteError(msg string) {
 	if w.err != nil {
 		return
@@ -688,7 +562,6 @@ func (w *Writer) WriteError(msg string) {
 	w.b = AppendError(w.b, msg)
 }
 
-// WriteString writes a string to the client.
 func (w *Writer) WriteString(msg string) {
 	if w.err != nil {
 		return
@@ -696,7 +569,6 @@ func (w *Writer) WriteString(msg string) {
 	w.b = AppendString(w.b, msg)
 }
 
-// WriteInt writes an integer to the client.
 func (w *Writer) WriteInt(num int) {
 	if w.err != nil {
 		return
@@ -704,7 +576,6 @@ func (w *Writer) WriteInt(num int) {
 	w.WriteInt64(int64(num))
 }
 
-// WriteInt64 writes a 64-bit signed integer to the client.
 func (w *Writer) WriteInt64(num int64) {
 	if w.err != nil {
 		return
@@ -712,7 +583,6 @@ func (w *Writer) WriteInt64(num int64) {
 	w.b = AppendInt(w.b, num)
 }
 
-// WriteUint64 writes a 64-bit unsigned integer to the client.
 func (w *Writer) WriteUint64(num uint64) {
 	if w.err != nil {
 		return
@@ -720,7 +590,6 @@ func (w *Writer) WriteUint64(num uint64) {
 	w.b = AppendUint(w.b, num)
 }
 
-// WriteRaw writes raw data to the client.
 func (w *Writer) WriteRaw(data []byte) {
 	if w.err != nil {
 		return
@@ -728,19 +597,7 @@ func (w *Writer) WriteRaw(data []byte) {
 	w.b = append(w.b, data...)
 }
 
-// WriteAny writes any type to client.
-//
-//	nil             -> null
-//	error           -> error (adds "ERR " when first word is not uppercase)
-//	string          -> bulk-string
-//	numbers         -> bulk-string
-//	[]byte          -> bulk-string
-//	bool            -> bulk-string ("0" or "1")
-//	slice           -> array
-//	map             -> array with key/value pairs
-//	SimpleString    -> string
-//	SimpleInt       -> integer
-//	everything-else -> bulk-string representation using fmt.Sprint()
+
 func (w *Writer) WriteAny(v interface{}) {
 	if w.err != nil {
 		return
@@ -748,7 +605,6 @@ func (w *Writer) WriteAny(v interface{}) {
 	w.b = AppendAny(w.b, v)
 }
 
-// Reader represent a reader for RESP or telnet commands.
 type Reader struct {
 	rd    *bufio.Reader
 	buf   []byte
@@ -757,7 +613,6 @@ type Reader struct {
 	cmds  []Command
 }
 
-// NewReader returns a command reader which will read RESP or telnet commands.
 func NewReader(rd io.Reader) *Reader {
 	return &Reader{
 		rd:  bufio.NewReader(rd),
@@ -797,12 +652,9 @@ func (rd *Reader) readCommands(leftover *int) ([]Command, error) {
 		rd.end = 0
 	}
 	if len(b) > 0 {
-		// we have data, yay!
-		// but is this enough data for a complete command? or multiple?
 	next:
 		switch b[0] {
 		default:
-			// just a plain text command
 			for i := 0; i < len(b); i++ {
 				if b[i] == '\n' {
 					var line []byte
@@ -873,7 +725,6 @@ func (rd *Reader) readCommands(leftover *int) ([]Command, error) {
 						break
 					}
 					if len(cmd.Args) > 0 {
-						// convert this to node command syntax
 						var wr Writer
 						wr.WriteArray(len(cmd.Args))
 						for i := range cmd.Args {
@@ -892,7 +743,6 @@ func (rd *Reader) readCommands(leftover *int) ([]Command, error) {
 				}
 			}
 		case '*':
-			// node formatted command
 			marks := make([]int, 0, 16)
 		outer2:
 			for i := 1; i < len(b); i++ {
@@ -942,16 +792,12 @@ func (rd *Reader) readCommands(leftover *int) ([]Command, error) {
 					if len(marks) == count*2 {
 						var cmd Command
 						if rd.rd != nil {
-							// make a raw copy of the entire command when
-							// there's a underlying reader.
 							cmd.Raw = append([]byte(nil), b[:i+1]...)
 						} else {
 							// just assign the slice
 							cmd.Raw = b[:i+1]
 						}
 						cmd.Args = make([][]byte, len(marks)/2)
-						// slice up the raw command into the args based on
-						// the recorded marks.
 						for h := 0; h < len(marks); h += 2 {
 							cmd.Args[h/2] = cmd.Raw[marks[h]:marks[h+1]]
 						}
@@ -979,12 +825,9 @@ func (rd *Reader) readCommands(leftover *int) ([]Command, error) {
 		return nil, errIncompleteCommand
 	}
 	if rd.end == len(rd.buf) {
-		// at the end of the buffer.
 		if rd.start == rd.end {
-			// rewind the to the beginning
 			rd.start, rd.end = 0, 0
 		} else {
-			// must grow the buffer
 			newbuf := make([]byte, len(rd.buf)*2)
 			copy(newbuf, rd.buf)
 			rd.buf = newbuf
@@ -998,7 +841,6 @@ func (rd *Reader) readCommands(leftover *int) ([]Command, error) {
 	return rd.readCommands(leftover)
 }
 
-// ReadCommands reads the next pipeline commands.
 func (rd *Reader) ReadCommands() ([]Command, error) {
 	for {
 		if len(rd.cmds) > 0 {
@@ -1014,7 +856,6 @@ func (rd *Reader) ReadCommands() ([]Command, error) {
 	}
 }
 
-// ReadCommand reads the next command.
 func (rd *Reader) ReadCommand() (Command, error) {
 	if len(rd.cmds) > 0 {
 		cmd := rd.cmds[0]
@@ -1029,7 +870,6 @@ func (rd *Reader) ReadCommand() (Command, error) {
 	return rd.ReadCommand()
 }
 
-// Parse parses a raw RESP message and returns a command.
 func Parse(raw []byte) (Command, error) {
 	rd := Reader{buf: raw, end: len(raw)}
 	var leftover int
@@ -1044,35 +884,26 @@ func Parse(raw []byte) (Command, error) {
 
 }
 
-// A Handler responds to an RESP request.
 type Handler interface {
 	ServeRESP(conn Conn, cmd Command)
 }
 
-// The HandlerFunc type is an adapter to allow the use of
-// ordinary functions as RESP handlers. If f is a function
-// with the appropriate signature, HandlerFunc(f) is a
-// Handler that calls f.
 type HandlerFunc func(conn Conn, cmd Command)
 
-// ServeRESP calls f(w, r)
 func (f HandlerFunc) ServeRESP(conn Conn, cmd Command) {
 	f(conn, cmd)
 }
 
-// ServeMux is an RESP command multiplexer.
 type ServeMux struct {
 	handlers map[string]Handler
 }
 
-// NewServeMux allocates and returns a new ServeMux.
 func NewServeMux() *ServeMux {
 	return &ServeMux{
 		handlers: make(map[string]Handler),
 	}
 }
 
-// HandleFunc registers the handler function for the given command.
 func (m *ServeMux) HandleFunc(command string, handler func(conn Conn, cmd Command)) {
 	if handler == nil {
 		panic("redcon: nil handler")
@@ -1080,8 +911,6 @@ func (m *ServeMux) HandleFunc(command string, handler func(conn Conn, cmd Comman
 	m.Handle(command, HandlerFunc(handler))
 }
 
-// Handle registers the handler for the given command.
-// If a handler already exists for command, Handle panics.
 func (m *ServeMux) Handle(command string, handler Handler) {
 	if command == "" {
 		panic("redcon: invalid command")
@@ -1096,7 +925,6 @@ func (m *ServeMux) Handle(command string, handler Handler) {
 	m.handlers[command] = handler
 }
 
-// ServeRESP dispatches the command to the handler.
 func (m *ServeMux) ServeRESP(conn Conn, cmd Command) {
 	command := strings.ToLower(string(cmd.Args[0]))
 
@@ -1107,7 +935,6 @@ func (m *ServeMux) ServeRESP(conn Conn, cmd Command) {
 	}
 }
 
-// PubSub is a Redis compatible pub/sub server
 type PubSub struct {
 	mu     sync.RWMutex
 	nextid uint64
@@ -1116,17 +943,14 @@ type PubSub struct {
 	conns  map[Conn]*pubSubConn
 }
 
-// Subscribe a connection to PubSub
 func (ps *PubSub) Subscribe(conn Conn, channel string) {
 	ps.subscribe(conn, false, channel)
 }
 
-// Psubscribe a connection to PubSub
 func (ps *PubSub) Psubscribe(conn Conn, channel string) {
 	ps.subscribe(conn, true, channel)
 }
 
-// Publish a message to subscribers
 func (ps *PubSub) Publish(channel, message string) int {
 	ps.mu.RLock()
 	defer ps.mu.RUnlock()
@@ -1134,7 +958,6 @@ func (ps *PubSub) Publish(channel, message string) int {
 		return 0
 	}
 	var sent int
-	// write messages to all clients that are subscribed on the channel
 	pivot := &pubSubEntry{pattern: false, channel: channel}
 	ps.chans.Ascend(pivot, func(item interface{}) bool {
 		entry := item.(*pubSubEntry)
@@ -1146,7 +969,6 @@ func (ps *PubSub) Publish(channel, message string) int {
 		return true
 	})
 
-	// match on and write all psubscribe clients
 	pivot = &pubSubEntry{pattern: true}
 	ps.chans.Ascend(pivot, func(item interface{}) bool {
 		entry := item.(*pubSubEntry)
@@ -1193,12 +1015,8 @@ func (sconn *pubSubConn) writeMessage(pat bool, pchan, channel, msg string) {
 	sconn.dconn.Flush()
 }
 
-// bgrunner runs in the background and reads incoming commands from the
-// detached client.
 func (sconn *pubSubConn) bgrunner(ps *PubSub) {
 	defer func() {
-		// client connection has ended, disconnect from the PubSub instances
-		// and close the network connection.
 		ps.mu.Lock()
 		defer ps.mu.Unlock()
 		for entry := range sconn.entries {
@@ -1293,9 +1111,6 @@ func (sconn *pubSubConn) bgrunner(ps *PubSub) {
 	}
 }
 
-// byEntry is a "less" function that sorts the entries in a btree. The tree
-// is sorted be (pattern, channel, conn.id). All pattern=true entries are at
-// the end (right) of the tree.
 func byEntry(a, b interface{}) bool {
 	aa := a.(*pubSubEntry)
 	bb := b.(*pubSubEntry)
@@ -1326,18 +1141,14 @@ func (ps *PubSub) subscribe(conn Conn, pattern bool, channel string) {
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 
-	// initialize the PubSub instance
 	if !ps.initd {
 		ps.conns = make(map[Conn]*pubSubConn)
 		ps.chans = btree.New(byEntry)
 		ps.initd = true
 	}
 
-	// fetch the pubSubConn
 	sconn, ok := ps.conns[conn]
 	if !ok {
-		// initialize a new pubSubConn, which runs on a detached connection,
-		// and attach it to the PubSub channels/conn btree
 		ps.nextid++
 		dconn := conn.Detach()
 		sconn = &pubSubConn{
@@ -1351,7 +1162,6 @@ func (ps *PubSub) subscribe(conn Conn, pattern bool, channel string) {
 	sconn.mu.Lock()
 	defer sconn.mu.Unlock()
 
-	// add an entry to the pubsub btree
 	entry := &pubSubEntry{
 		pattern: pattern,
 		channel: channel,
@@ -1360,7 +1170,6 @@ func (ps *PubSub) subscribe(conn Conn, pattern bool, channel string) {
 	ps.chans.Set(entry)
 	sconn.entries[entry] = true
 
-	// send a message to the client
 	sconn.dconn.WriteArray(3)
 	if pattern {
 		sconn.dconn.WriteBulkString("psubscribe")
@@ -1377,7 +1186,6 @@ func (ps *PubSub) subscribe(conn Conn, pattern bool, channel string) {
 	sconn.dconn.WriteInt(count)
 	sconn.dconn.Flush()
 
-	// start the background client operation
 	if !ok {
 		go sconn.bgrunner(ps)
 	}
@@ -1386,7 +1194,6 @@ func (ps *PubSub) subscribe(conn Conn, pattern bool, channel string) {
 func (ps *PubSub) unsubscribe(conn Conn, pattern, all bool, channel string) {
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
-	// fetch the pubSubConn. This must exist
 	sconn := ps.conns[conn]
 	sconn.mu.Lock()
 	defer sconn.mu.Unlock()
@@ -1416,7 +1223,6 @@ func (ps *PubSub) unsubscribe(conn Conn, pattern, all bool, channel string) {
 		sconn.dconn.WriteInt(count)
 	}
 	if all {
-		// unsubscribe from all (p)subscribe entries
 		var entries []*pubSubEntry
 		for entry := range sconn.entries {
 			if entry.pattern == pattern {
@@ -1431,7 +1237,6 @@ func (ps *PubSub) unsubscribe(conn Conn, pattern, all bool, channel string) {
 			}
 		}
 	} else {
-		// unsubscribe single channel from (p)subscribe.
 		for entry := range sconn.entries {
 			if entry.pattern == pattern && entry.channel == channel {
 				removeEntry(entry)
@@ -1442,8 +1247,6 @@ func (ps *PubSub) unsubscribe(conn Conn, pattern, all bool, channel string) {
 	sconn.dconn.Flush()
 }
 
-// SetIdleClose will automatically close idle connections after the specified
-// duration. Use zero to disable this feature.
 func (s *Server) SetIdleClose(dur time.Duration) {
 	s.mu.Lock()
 	s.idleClose = dur
