@@ -116,9 +116,6 @@ func (h *HandleFuns) TTL(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -134,9 +131,6 @@ func (h *HandleFuns) Get(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -278,9 +272,6 @@ func (h *HandleFuns) LRANGE(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -334,9 +325,6 @@ func (h *HandleFuns) HGet(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -351,9 +339,6 @@ func (h *HandleFuns) HLEN(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -368,9 +353,6 @@ func (h *HandleFuns) HGETALL(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -423,9 +405,6 @@ func (h *HandleFuns) SMEMBERS(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -441,9 +420,6 @@ func (h *HandleFuns) SCARD(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -458,9 +434,6 @@ func (h *HandleFuns) SISMEMBER(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -476,9 +449,6 @@ func (h *HandleFuns) SRANDMEMBER(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -549,9 +519,6 @@ func (h *HandleFuns) ZSCORE(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -566,9 +533,6 @@ func (h *HandleFuns) ZCARD(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -583,9 +547,6 @@ func (h *HandleFuns) ZRANGE(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -600,9 +561,6 @@ func (h *HandleFuns) ZREVRANGE(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
@@ -617,9 +575,6 @@ func (h *HandleFuns) ZRANGEBYSCORE(conn resp.Conn, cmd resp.Command) {
 	}
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*3)
 	res, err := raft.Raft.SyncRead(ctx, 1, cmd.Args)
-	//h.itemsMux.RLock()
-	//val, ok := h.items[string(cmd.Args[1])]
-	//h.itemsMux.RUnlock()
 	if err != nil {
 		log.Println(err)
 		conn.WriteBulk([]byte(fmt.Sprintf("get key error: %t", err)))
