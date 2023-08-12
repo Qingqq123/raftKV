@@ -1,6 +1,5 @@
 package list
 
-// LinkedList is doubly linked list
 type LinkedList struct {
 	first *node
 	last  *node
@@ -13,7 +12,6 @@ type node struct {
 	next *node
 }
 
-// Add adds value to the tail
 func (list *LinkedList) Add(val interface{}) {
 	if list == nil {
 		panic("list is nil")
@@ -48,7 +46,6 @@ func (list *LinkedList) find(index int) (n *node) {
 	return n
 }
 
-// Get returns value at the given index
 func (list *LinkedList) Get(index int) (val interface{}) {
 	if list == nil {
 		panic("list is nil")
@@ -59,7 +56,6 @@ func (list *LinkedList) Get(index int) (val interface{}) {
 	return list.find(index).val
 }
 
-// Set updates value at the given index, the index should between [0, list.size]
 func (list *LinkedList) Set(index int, val interface{}) {
 	if list == nil {
 		panic("list is nil")
@@ -71,7 +67,6 @@ func (list *LinkedList) Set(index int, val interface{}) {
 	n.val = val
 }
 
-// Insert inserts value at the given index, the original element at the given index will move backward
 func (list *LinkedList) Insert(index int, val interface{}) {
 	if list == nil {
 		panic("list is nil")
@@ -84,7 +79,6 @@ func (list *LinkedList) Insert(index int, val interface{}) {
 		list.Add(val)
 		return
 	}
-	// list is not empty
 	pivot := list.find(index)
 	n := &node{
 		val:  val,
@@ -112,14 +106,12 @@ func (list *LinkedList) removeNode(n *node) {
 		n.next.prev = n.prev
 	}
 
-	// for gc
 	n.prev = nil
 	n.next = nil
 
 	list.size--
 }
 
-// Remove removes value at the given index
 func (list *LinkedList) Remove(index int) (val interface{}) {
 	if list == nil {
 		panic("list is nil")
@@ -133,13 +125,11 @@ func (list *LinkedList) Remove(index int) (val interface{}) {
 	return n.val
 }
 
-// RemoveLast removes the last element and returns its value
 func (list *LinkedList) RemoveLast() (val interface{}) {
 	if list == nil {
 		panic("list is nil")
 	}
 	if list.last == nil {
-		// empty list
 		return nil
 	}
 	n := list.last
@@ -147,7 +137,6 @@ func (list *LinkedList) RemoveLast() (val interface{}) {
 	return n.val
 }
 
-// RemoveAllByVal removes all elements with the given val
 func (list *LinkedList) RemoveAllByVal(expected Expected) int {
 	if list == nil {
 		panic("list is nil")
@@ -166,8 +155,6 @@ func (list *LinkedList) RemoveAllByVal(expected Expected) int {
 	return removed
 }
 
-// RemoveByVal removes at most `count` values of the specified value in this list
-// scan from left to right
 func (list *LinkedList) RemoveByVal(expected Expected, count int) int {
 	if list == nil {
 		panic("list is nil")
@@ -189,8 +176,6 @@ func (list *LinkedList) RemoveByVal(expected Expected, count int) int {
 	return removed
 }
 
-// ReverseRemoveByVal removes at most `count` values of the specified value in this list
-// scan from right to left
 func (list *LinkedList) ReverseRemoveByVal(expected Expected, count int) int {
 	if list == nil {
 		panic("list is nil")
@@ -212,7 +197,6 @@ func (list *LinkedList) ReverseRemoveByVal(expected Expected, count int) int {
 	return removed
 }
 
-// Len returns the number of elements in list
 func (list *LinkedList) Len() int {
 	if list == nil {
 		panic("list is nil")
@@ -220,8 +204,6 @@ func (list *LinkedList) Len() int {
 	return list.size
 }
 
-// ForEach visits each element in the list
-// if the consumer returns false, the loop will be break
 func (list *LinkedList) ForEach(consumer Consumer) {
 	if list == nil {
 		panic("list is nil")
@@ -238,7 +220,6 @@ func (list *LinkedList) ForEach(consumer Consumer) {
 	}
 }
 
-// Contains returns whether the given value exist in the list
 func (list *LinkedList) Contains(expected Expected) bool {
 	contains := false
 	list.ForEach(func(i int, actual interface{}) bool {
@@ -251,7 +232,6 @@ func (list *LinkedList) Contains(expected Expected) bool {
 	return contains
 }
 
-// Range returns elements which index within [start, stop)
 func (list *LinkedList) Range(start int, stop int) []interface{} {
 	if list == nil {
 		panic("list is nil")
@@ -281,7 +261,6 @@ func (list *LinkedList) Range(start int, stop int) []interface{} {
 	return slice
 }
 
-// Make creates a new linked list
 func Make(vals ...interface{}) *LinkedList {
 	list := LinkedList{}
 	for _, v := range vals {
