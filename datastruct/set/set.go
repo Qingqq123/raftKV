@@ -4,12 +4,10 @@ import (
 	"github.com/hdt3213/godis/datastruct/dict"
 )
 
-// Set is a set of elements based on hash table
 type Set struct {
 	dict dict.Dict
 }
 
-// Make creates a new set
 func Make(members ...string) *Set {
 	set := &Set{
 		dict: dict.MakeSimple(),
@@ -20,17 +18,14 @@ func Make(members ...string) *Set {
 	return set
 }
 
-// Add adds member into set
 func (set *Set) Add(val string) int {
 	return set.dict.Put(val, nil)
 }
 
-// Remove removes member from set
 func (set *Set) Remove(val string) int {
 	return set.dict.Remove(val)
 }
 
-// Has returns true if the val exists in the set
 func (set *Set) Has(val string) bool {
 	if set == nil || set.dict == nil {
 		return false
@@ -39,7 +34,6 @@ func (set *Set) Has(val string) bool {
 	return exists
 }
 
-// Len returns number of members in the set
 func (set *Set) Len() int {
 	if set == nil || set.dict == nil {
 		return 0
@@ -47,7 +41,6 @@ func (set *Set) Len() int {
 	return set.dict.Len()
 }
 
-// ToSlice convert set to []string
 func (set *Set) ToSlice() []string {
 	slice := make([]string, set.Len())
 	i := 0
@@ -64,7 +57,6 @@ func (set *Set) ToSlice() []string {
 	return slice
 }
 
-// ForEach visits each member in the set
 func (set *Set) ForEach(consumer func(member string) bool) {
 	if set == nil || set.dict == nil {
 		return
@@ -74,7 +66,6 @@ func (set *Set) ForEach(consumer func(member string) bool) {
 	})
 }
 
-// ShallowCopy copies all members to another set
 func (set *Set) ShallowCopy() *Set {
 	result := Make()
 	set.ForEach(func(member string) bool {
@@ -84,7 +75,6 @@ func (set *Set) ShallowCopy() *Set {
 	return result
 }
 
-// Intersect intersects two sets
 func Intersect(sets ...*Set) *Set {
 	result := Make()
 	if len(sets) == 0 {
@@ -106,7 +96,6 @@ func Intersect(sets ...*Set) *Set {
 	return result
 }
 
-// Union adds two sets
 func Union(sets ...*Set) *Set {
 	result := Make()
 	for _, set := range sets {
@@ -118,7 +107,6 @@ func Union(sets ...*Set) *Set {
 	return result
 }
 
-// Diff subtracts two sets
 func Diff(sets ...*Set) *Set {
 	if len(sets) == 0 {
 		return Make()
@@ -136,7 +124,6 @@ func Diff(sets ...*Set) *Set {
 	return result
 }
 
-// RandomMembers randomly returns keys of the given number, may contain duplicated key
 func (set *Set) RandomMembers(limit int) []string {
 	if set == nil || set.dict == nil {
 		return nil
@@ -144,7 +131,6 @@ func (set *Set) RandomMembers(limit int) []string {
 	return set.dict.RandomKeys(limit)
 }
 
-// RandomDistinctMembers randomly returns keys of the given number, won't contain duplicated key
 func (set *Set) RandomDistinctMembers(limit int) []string {
 	return set.dict.RandomDistinctKeys(limit)
 }
