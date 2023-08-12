@@ -5,28 +5,19 @@ import (
 	"strconv"
 )
 
-/*
- * ScoreBorder is a struct represents `min` `max` parameter of redis command `ZRANGEBYSCORE`
- * can accept:
- *   int or float value, such as 2.718, 2, -2.718, -2 ...
- *   exclusive int or float value, such as (2.718, (2, (-2.718, (-2 ...
- *   infinity: +inf, -inf， inf(same as +inf)
- */
+
 
 const (
 	negativeInf int8 = -1
 	positiveInf int8 = 1
 )
 
-// ScoreBorder represents range of a float value, including: <, <=, >, >=, +inf, -inf
 type ScoreBorder struct {
 	Inf     int8
 	Value   float64
 	Exclude bool
 }
 
-// if max.greater(score) then the score is within the upper border
-// do not use min.greater()
 func (border *ScoreBorder) greater(value float64) bool {
 	if border.Inf == negativeInf {
 		return false
@@ -59,7 +50,6 @@ var negativeInfBorder = &ScoreBorder{
 	Inf: negativeInf,
 }
 
-// ParseScoreBorder creates ScoreBorder from redis arguments
 func ParseScoreBorder(s string) (*ScoreBorder, error) {
 	if s == "inf" || s == "+inf" {
 		return positiveInfBorder, nil
