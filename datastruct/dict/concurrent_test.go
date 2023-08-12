@@ -14,10 +14,9 @@ func TestConcurrentPut(t *testing.T) {
 	wg.Add(count)
 	for i := 0; i < count; i++ {
 		go func(i int) {
-			// insert
 			key := "k" + strconv.Itoa(i)
 			ret := d.Put(key, i)
-			if ret != 1 { // insert 1
+			if ret != 1 { 
 				t.Error("put test failed: expected result 1, actual: " + strconv.Itoa(ret) + ", key: " + key)
 			}
 			val, ok := d.Get(key)
@@ -44,12 +43,11 @@ func TestConcurrentPutWithLock(t *testing.T) {
 
 	for i := 0; i < count; i++ {
 		go func(i int) {
-			// insert
 			key := "k" + strconv.Itoa(i)
 			keys := []string{key}
 			d.RWLocks(keys, nil)
 			ret := d.PutWithLock(key, i)
-			if ret != 1 { // insert 1
+			if ret != 1 { 
 				t.Error("put test failed: expected result 1, actual: " + strconv.Itoa(ret) + ", key: " + key)
 			}
 			val, ok := d.GetWithLock(key)
@@ -76,10 +74,9 @@ func TestConcurrentPutIfAbsent(t *testing.T) {
 	wg.Add(count)
 	for i := 0; i < count; i++ {
 		go func(i int) {
-			// insert
 			key := "k" + strconv.Itoa(i)
 			ret := d.PutIfAbsent(key, i)
-			if ret != 1 { // insert 1
+			if ret != 1 { 
 				t.Error("put test failed: expected result 1, actual: " + strconv.Itoa(ret) + ", key: " + key)
 			}
 			val, ok := d.Get(key)
@@ -94,9 +91,8 @@ func TestConcurrentPutIfAbsent(t *testing.T) {
 				t.Error("put test failed: expected true, actual: false, key: " + key + ", retry: " + strconv.FormatBool(ok))
 			}
 
-			// update
 			ret = d.PutIfAbsent(key, i*10)
-			if ret != 0 { // no update
+			if ret != 0 { 
 				t.Error("put test failed: expected result 0, actual: " + strconv.Itoa(ret))
 			}
 			val, ok = d.Get(key)
@@ -122,12 +118,11 @@ func TestConcurrentPutIfAbsentWithLock(t *testing.T) {
 
 	for i := 0; i < count; i++ {
 		go func(i int) {
-			// insert
 			key := "k" + strconv.Itoa(i)
 			keys := []string{key}
 			d.RWLocks(keys, nil)
 			ret := d.PutIfAbsentWithLock(key, i)
-			if ret != 1 { // insert 1
+			if ret != 1 { 
 				t.Error("put test failed: expected result 1, actual: " + strconv.Itoa(ret) + ", key: " + key)
 			}
 			val, ok := d.GetWithLock(key)
@@ -142,9 +137,9 @@ func TestConcurrentPutIfAbsentWithLock(t *testing.T) {
 				t.Error("put test failed: expected true, actual: false, key: " + key + ", retry: " + strconv.FormatBool(ok))
 			}
 
-			// update
+			
 			ret = d.PutIfAbsentWithLock(key, i*10)
-			if ret != 0 { // no update
+			if ret != 0 { 
 				t.Error("put test failed: expected result 0, actual: " + strconv.Itoa(ret))
 			}
 			val, ok = d.GetWithLock(key)
@@ -171,11 +166,9 @@ func TestConcurrentPutIfExists(t *testing.T) {
 
 	for i := 0; i < count; i++ {
 		go func(i int) {
-			// insert
 			key := "k" + strconv.Itoa(i)
-			// insert
 			ret := d.PutIfExists(key, i)
-			if ret != 0 { // insert
+			if ret != 0 { 
 				t.Error("put test failed: expected result 0, actual: " + strconv.Itoa(ret))
 			}
 
@@ -205,13 +198,11 @@ func TestConcurrentPutIfExistsWithLock(t *testing.T) {
 
 	for i := 0; i < count; i++ {
 		go func(i int) {
-			// insert
 			key := "k" + strconv.Itoa(i)
 			keys := []string{key}
 			d.RWLocks(keys, nil)
-			// insert
 			ret := d.PutIfExistsWithLock(key, i)
-			if ret != 0 { // insert
+			if ret != 0 { 
 				t.Error("put test failed: expected result 0, actual: " + strconv.Itoa(ret))
 			}
 			d.PutWithLock(key, i)
@@ -236,9 +227,7 @@ func TestConcurrentPutIfExistsWithLock(t *testing.T) {
 func TestConcurrentRemove(t *testing.T) {
 	d := MakeConcurrent(0)
 	totalCount := 100
-	// remove head node
 	for i := 0; i < totalCount; i++ {
-		// insert
 		key := "k" + strconv.Itoa(i)
 		d.Put(key, i)
 	}
@@ -278,10 +267,8 @@ func TestConcurrentRemove(t *testing.T) {
 		}
 	}
 
-	// remove tail node
 	d = MakeConcurrent(0)
 	for i := 0; i < 100; i++ {
-		// insert
 		key := "k" + strconv.Itoa(i)
 		d.Put(key, i)
 	}
@@ -312,11 +299,9 @@ func TestConcurrentRemove(t *testing.T) {
 		}
 	}
 
-	// remove middle node
 	d = MakeConcurrent(0)
 	d.Put("head", 0)
 	for i := 0; i < 10; i++ {
-		// insert
 		key := "k" + strconv.Itoa(i)
 		d.Put(key, i)
 	}
@@ -352,9 +337,7 @@ func TestConcurrentRemove(t *testing.T) {
 func TestConcurrentRemoveWithLock(t *testing.T) {
 	d := MakeConcurrent(0)
 	totalCount := 100
-	// remove head node
 	for i := 0; i < totalCount; i++ {
-		// insert
 		key := "k" + strconv.Itoa(i)
 		d.PutWithLock(key, i)
 	}
@@ -394,10 +377,8 @@ func TestConcurrentRemoveWithLock(t *testing.T) {
 		}
 	}
 
-	// remove tail node
 	d = MakeConcurrent(0)
 	for i := 0; i < 100; i++ {
-		// insert
 		key := "k" + strconv.Itoa(i)
 		d.PutWithLock(key, i)
 	}
@@ -428,11 +409,9 @@ func TestConcurrentRemoveWithLock(t *testing.T) {
 		}
 	}
 
-	// remove middle node
 	d = MakeConcurrent(0)
 	d.Put("head", 0)
 	for i := 0; i < 10; i++ {
-		// insert
 		key := "k" + strconv.Itoa(i)
 		d.PutWithLock(key, i)
 	}
@@ -465,12 +444,10 @@ func TestConcurrentRemoveWithLock(t *testing.T) {
 	}
 }
 
-//change t.Error remove->forEach
 func TestConcurrentForEach(t *testing.T) {
 	d := MakeConcurrent(0)
 	size := 100
 	for i := 0; i < size; i++ {
-		// insert
 		key := "k" + strconv.Itoa(i)
 		d.Put(key, i)
 	}
