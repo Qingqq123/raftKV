@@ -1,10 +1,7 @@
 package list
 
-// Expected check whether given item is equals to expected value
 type Expected func(a interface{}) bool
 
-// Consumer traverses list.
-// It receives index and value as params, returns true to continue traversal, while returns false to break
 type Consumer func(i int, v interface{}) bool
 
 type List interface {
