@@ -8,10 +8,10 @@ import (
 	"strings"
 )
 
-// Type of RESP
+
 type Type byte
 
-// Various RESP kinds
+
 const (
 	Integer = ':'
 	String  = '+'
@@ -27,7 +27,7 @@ type RESP struct {
 	Count int
 }
 
-// ForEach iterates over each Array element
+
 func (r RESP) ForEach(iter func(resp RESP) bool) {
 	data := r.Data
 	for i := 0; i < r.Count; i++ {
@@ -57,10 +57,6 @@ func (r RESP) Float() float64 {
 	return x
 }
 
-// Map returns a key/value map of an Array.
-// The receiver RESP must be an Array with an equal number of values, where
-// the value of the key is followed by the key.
-// Example: key1,value1,key2,value2,key3,value3
 func (r RESP) Map() map[string]RESP {
 	if r.Type != Array {
 		return nil
@@ -104,27 +100,25 @@ func (r RESP) Exists() bool {
 	return r.Type != 0
 }
 
-// ReadNextRESP returns the next node in b and returns the number of bytes the
-// took up the result.
 func ReadNextRESP(b []byte) (n int, resp RESP) {
 	if len(b) == 0 {
-		return 0, RESP{} // no data to read
+		return 0, RESP{} 
 	}
 	resp.Type = Type(b[0])
 	switch resp.Type {
 	case Integer, String, Bulk, Array, Error:
 	default:
-		return 0, RESP{} // invalid kind
+		return 0, RESP{} 
 	}
-	// read to end of line
+
 	i := 1
 	for ; ; i++ {
 		if i == len(b) {
-			return 0, RESP{} // not enough data
+			return 0, RESP{} 
 		}
 		if b[i] == '\n' {
 			if b[i-1] != '\r' {
-				return 0, RESP{} //, missing CR character
+				return 0, RESP{} 
 			}
 			i++
 			break
@@ -133,34 +127,31 @@ func ReadNextRESP(b []byte) (n int, resp RESP) {
 	resp.Raw = b[0:i]
 	resp.Data = b[1 : i-2]
 	if resp.Type == Integer {
-		// Integer
 		if len(resp.Data) == 0 {
-			return 0, RESP{} //, invalid integer
+			return 0, RESP{} 
 		}
 		var j int
 		if resp.Data[0] == '-' {
 			if len(resp.Data) == 1 {
-				return 0, RESP{} //, invalid integer
+				return 0, RESP{} 
 			}
 			j++
 		}
 		for ; j < len(resp.Data); j++ {
 			if resp.Data[j] < '0' || resp.Data[j] > '9' {
-				return 0, RESP{} // invalid integer
+				return 0, RESP{} 
 			}
 		}
 		return len(resp.Raw), resp
 	}
 	if resp.Type == String || resp.Type == Error {
-		// String, Error
 		return len(resp.Raw), resp
 	}
 	var err error
 	resp.Count, err = strconv.Atoi(string(resp.Data))
 	if resp.Type == Bulk {
-		// Bulk
 		if err != nil {
-			return 0, RESP{} // invalid number of bytes
+			return 0, RESP{} 
 		}
 		if resp.Count < 0 {
 			resp.Data = nil
@@ -168,19 +159,18 @@ func ReadNextRESP(b []byte) (n int, resp RESP) {
 			return len(resp.Raw), resp
 		}
 		if len(b) < i+resp.Count+2 {
-			return 0, RESP{} // not enough data
+			return 0, RESP{} 
 		}
 		if b[i+resp.Count] != '\r' || b[i+resp.Count+1] != '\n' {
-			return 0, RESP{} // invalid end of line
+			return 0, RESP{} 
 		}
 		resp.Data = b[i : i+resp.Count]
 		resp.Raw = b[0 : i+resp.Count+2]
 		resp.Count = 0
 		return len(resp.Raw), resp
 	}
-	// Array
 	if err != nil {
-		return 0, RESP{} // invalid number of elements
+		return 0, RESP{} 
 	}
 	var tn int
 	sdata := b[i:]
@@ -197,29 +187,17 @@ func ReadNextRESP(b []byte) (n int, resp RESP) {
 	return len(resp.Raw), resp
 }
 
-// Kind is the kind of command
+
 type Kind int
 
 const (
-	// Redis is returned for Redis protocol commands
 	Redis Kind = iota
-	// Tile38 is returnd for Tile38 native protocol commands
 	Tile38
-	// Telnet is returnd for plain telnet commands
 	Telnet
 )
 
 var errInvalidMessage = &errProtocol{"invalid message"}
 
-// ReadNextCommand reads the next command from the provided packet. It's
-// possible that the packet contains multiple commands, or zero commands
-// when the packet is incomplete.
-// 'argsbuf' is an optional reusable buffer and it can be nil.
-// 'complete' indicates that a command was read. false means no more commands.
-// 'args' are the output arguments for the command.
-// 'kind' is the type of command that was read.
-// 'leftover' is any remaining unused bytes which belong to the next command.
-// 'err' is returned when a protocol error was encountered.
 func ReadNextCommand(packet []byte, argsbuf [][]byte) (
 	complete bool, args [][]byte, kind Kind, leftover []byte, err error,
 ) {
@@ -231,7 +209,6 @@ func ReadNextCommand(packet []byte, argsbuf [][]byte) (
 			}
 			return readTelnetCommand(packet, args)
 		}
-		// standard redis command
 		for s, i := 1, 1; i < len(packet); i++ {
 			if packet[i] == '\n' {
 				if packet[i-1] != '\r' {
@@ -307,8 +284,6 @@ func readTile38Command(packet []byte, argsbuf [][]byte) (
 			reading:
 				for len(line) != 0 {
 					if line[0] == '{' {
-						// The native protocol cannot understand json boundaries so it assumes that
-						// a json element must be at the end of the line.
 						args = append(args, line)
 						break
 					}
@@ -316,8 +291,6 @@ func readTile38Command(packet []byte, argsbuf [][]byte) (
 						if len(args) > 0 &&
 							strings.ToLower(string(args[0])) == "set" &&
 							strings.ToLower(string(args[len(args)-1])) == "string" {
-							// Setting a string value that is contained inside double quotes.
-							// This is only because of the boundary issues of the native protocol.
 							args = append(args, line[1:len(line)-1])
 							break
 						}
@@ -346,7 +319,6 @@ func readTile38Command(packet []byte, argsbuf [][]byte) (
 func readTelnetCommand(packet []byte, argsbuf [][]byte) (
 	complete bool, args [][]byte, kind Kind, leftover []byte, err error,
 ) {
-	// just a plain text command
 	for i := 0; i < len(packet); i++ {
 		if packet[i] == '\n' {
 			var line []byte
@@ -421,7 +393,6 @@ func readTelnetCommand(packet []byte, argsbuf [][]byte) (
 	return false, args[:0], Telnet, packet, nil
 }
 
-// appendPrefix will append a "$3\r\n" style redis prefix for a message.
 func appendPrefix(b []byte, c byte, n int64) []byte {
 	if n >= 0 && n <= 9 {
 		return append(b, c, byte('0'+n), '\r', '\n')
@@ -431,52 +402,44 @@ func appendPrefix(b []byte, c byte, n int64) []byte {
 	return append(b, '\r', '\n')
 }
 
-// AppendUint appends a Redis protocol uint64 to the input bytes.
 func AppendUint(b []byte, n uint64) []byte {
 	b = append(b, ':')
 	b = strconv.AppendUint(b, n, 10)
 	return append(b, '\r', '\n')
 }
 
-// AppendInt appends a Redis protocol int64 to the input bytes.
 func AppendInt(b []byte, n int64) []byte {
 	return appendPrefix(b, ':', n)
 }
 
-// AppendArray appends a Redis protocol array to the input bytes.
 func AppendArray(b []byte, n int) []byte {
 	return appendPrefix(b, '*', int64(n))
 }
 
-// AppendBulk appends a Redis protocol bulk byte slice to the input bytes.
 func AppendBulk(b []byte, bulk []byte) []byte {
 	b = appendPrefix(b, '$', int64(len(bulk)))
 	b = append(b, bulk...)
 	return append(b, '\r', '\n')
 }
 
-// AppendBulkString appends a Redis protocol bulk string to the input bytes.
 func AppendBulkString(b []byte, bulk string) []byte {
 	b = appendPrefix(b, '$', int64(len(bulk)))
 	b = append(b, bulk...)
 	return append(b, '\r', '\n')
 }
 
-// AppendString appends a Redis protocol string to the input bytes.
 func AppendString(b []byte, s string) []byte {
 	b = append(b, '+')
 	b = append(b, stripNewlines(s)...)
 	return append(b, '\r', '\n')
 }
 
-// AppendError appends a Redis protocol error to the input bytes.
 func AppendError(b []byte, s string) []byte {
 	b = append(b, '-')
 	b = append(b, stripNewlines(s)...)
 	return append(b, '\r', '\n')
 }
 
-// AppendOK appends a Redis protocol OK to the input bytes.
 func AppendOK(b []byte) []byte {
 	return append(b, '+', 'O', 'K', '\r', '\n')
 }
@@ -491,7 +454,6 @@ func stripNewlines(s string) string {
 	return s
 }
 
-// AppendTile38 appends a Tile38 message to the input bytes.
 func AppendTile38(b []byte, data []byte) []byte {
 	b = append(b, '$')
 	b = strconv.AppendInt(b, int64(len(data)), 10)
@@ -500,22 +462,18 @@ func AppendTile38(b []byte, data []byte) []byte {
 	return append(b, '\r', '\n')
 }
 
-// AppendNull appends a Redis protocol null to the input bytes.
 func AppendNull(b []byte) []byte {
 	return append(b, '$', '-', '1', '\r', '\n')
 }
 
-// AppendBulkFloat appends a float64, as bulk bytes.
 func AppendBulkFloat(dst []byte, f float64) []byte {
 	return AppendBulk(dst, strconv.AppendFloat(nil, f, 'f', -1, 64))
 }
 
-// AppendBulkInt appends an int64, as bulk bytes.
 func AppendBulkInt(dst []byte, x int64) []byte {
 	return AppendBulk(dst, strconv.AppendInt(nil, x, 10))
 }
 
-// AppendBulkUint appends an uint64, as bulk bytes.
 func AppendBulkUint(dst []byte, x uint64) []byte {
 	return AppendBulk(dst, strconv.AppendUint(nil, x, 10))
 }
@@ -536,39 +494,20 @@ func prefixERRIfNeeded(msg string) string {
 	return msg
 }
 
-// SimpleString is for representing a non-bulk representation of a string
-// from an *Any call.
+
 type SimpleString string
 
-// SimpleInt is for representing a non-bulk representation of a int
-// from an *Any call.
+
 type SimpleInt int
 
-// SimpleError is for representing an error without adding the "ERR" prefix
-// from an *Any call.
 type SimpleError error
 
-// Marshaler is the interface implemented by types that
-// can marshal themselves into a Redis response type from an *Any call.
-// The return value is not check for validity.
+
 type Marshaler interface {
 	MarshalRESP() []byte
 }
 
-// AppendAny appends any type to valid Redis type.
-//
-//	nil             -> null
-//	error           -> error (adds "ERR " when first word is not uppercase)
-//	string          -> bulk-string
-//	numbers         -> bulk-string
-//	[]byte          -> bulk-string
-//	bool            -> bulk-string ("0" or "1")
-//	slice           -> array
-//	map             -> array with key/value pairs
-//	SimpleString    -> string
-//	SimpleInt       -> integer
-//	Marshaler       -> raw bytes
-//	everything-else -> bulk-string representation using fmt.Sprint()
+
 func AppendAny(b []byte, v interface{}) []byte {
 	switch v := v.(type) {
 	case SimpleString:
